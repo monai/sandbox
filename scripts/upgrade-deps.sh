@@ -67,8 +67,5 @@ for entry in "${changed[@]}"; do
     names+=("${labels[$arg]}")
 done
 
-IFS=', '
-subject="Bump ${names[*]}"
-
 git -C "$repo_root" add Dockerfile
-git -C "$repo_root" commit -m "$subject"
+git -C "$repo_root" commit -m "Bump dependencies" -m "$(printf '%s\n' "${names[@]}")"
