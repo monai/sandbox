@@ -21,17 +21,12 @@ for value in "$latest_uv" "$latest_claude" "$latest_codex" "$latest_pi"; do
     fi
 done
 
-declare -A labels=(
-    [UV_VERSION]="uv"
-    [CLAUDE_CODE_VERSION]="Claude Code"
-    [CODEX_VERSION]="Codex"
-    [PI_CODING_AGENT_VERSION]="pi-coding-agent"
-)
 changed=()
 
 update_arg() {
     local arg=$1
-    local new_version=$2
+    local label=$2
+    local new_version=$3
     local current_version
 
     current_version=$(grep -E "^ARG ${arg}=" "$dockerfile" | head -n1 | cut -d= -f2-)
@@ -47,14 +42,14 @@ update_arg() {
     fi
 
     sed -i "s/^ARG ${arg}=.*/ARG ${arg}=${new_version}/" "$dockerfile"
-    changed+=("${arg}:${current_version}:${new_version}")
+    changed+=("${label}:${current_version}:${new_version}")
     echo "${arg}: ${current_version} -> ${new_version}"
 }
 
-update_arg UV_VERSION "$latest_uv"
-update_arg CLAUDE_CODE_VERSION "$latest_claude"
-update_arg CODEX_VERSION "$latest_codex"
-update_arg PI_CODING_AGENT_VERSION "$latest_pi"
+update_arg UV_VERSION "uv" "$latest_uv"
+update_arg CLAUDE_CODE_VERSION "Claude Code" "$latest_claude"
+update_arg CODEX_VERSION "Codex" "$latest_codex"
+update_arg PI_CODING_AGENT_VERSION "pi-coding-agent" "$latest_pi"
 
 if (( ${#changed[@]} == 0 )); then
     echo "No dependency updates needed."
@@ -63,8 +58,7 @@ fi
 
 names=()
 for entry in "${changed[@]}"; do
-    arg=${entry%%:*}
-    names+=("${labels[$arg]}")
+    names+=("${entry%%:*}")
 done
 
 git -C "$repo_root" add Dockerfile
