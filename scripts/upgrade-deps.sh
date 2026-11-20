@@ -67,17 +67,8 @@ for entry in "${changed[@]}"; do
     names+=("${labels[$arg]}")
 done
 
-if (( ${#names[@]} == 1 )); then
-    subject="Bump ${names[0]} version"
-elif (( ${#names[@]} == 2 )); then
-    subject="Bump ${names[0]} and ${names[1]} versions"
-else
-    subject="Bump ${names[0]}"
-    for name in "${names[@]:1:${#names[@]}-2}"; do
-        subject+=", ${name}"
-    done
-    subject+=", and ${names[${#names[@]}-1]} versions"
-fi
+IFS=', '
+subject="Bump ${names[*]}"
 
 git -C "$repo_root" add Dockerfile
 git -C "$repo_root" commit -m "$subject"
