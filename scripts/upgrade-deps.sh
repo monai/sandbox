@@ -41,7 +41,11 @@ update_arg() {
         return
     fi
 
-    sed -i "s/^ARG ${arg}=.*/ARG ${arg}=${new_version}/" "$dockerfile"
+    local tmp
+    tmp=$(mktemp)
+    sed "s/^ARG ${arg}=.*/ARG ${arg}=${new_version}/" "$dockerfile" > "$tmp"
+    cp "$tmp" "$dockerfile"
+    rm -f "$tmp"
     changed+=("${label}:${current_version}:${new_version}")
     echo "${arg}: ${current_version} -> ${new_version}"
 }
