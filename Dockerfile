@@ -2,7 +2,6 @@ ARG UV_VERSION=0.13.10
 
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
 
-# ---- base: core tooling, runs as root, no agents ----
 FROM debian:trixie-slim AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -36,7 +35,6 @@ COPY --from=uv /uv /uvx /usr/local/bin/
 
 ENV LANG=en_US.UTF-8
 
-# ---- slim-root: agent user, coding agents and everyday shell tools (root) ----
 FROM base AS slim-root
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -45,6 +43,8 @@ ARG AGENT_GID=1000
 ARG CLAUDE_CODE_VERSION=2.1.332
 ARG CODEX_VERSION=0.172.0
 ARG PI_CODING_AGENT_VERSION=1.6.1
+ARG REX_COMMIT=b070aae645f5cbfac65d65d031a8b712b2ebca36
+ARG REX_SHA256=37908dc3e79386b05fcd2e26d1bcf3c28f34536fc816eb8126a9b9c65266f630
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apparmor \
@@ -85,13 +85,22 @@ RUN npm install -g \
     "@openai/codex@${CODEX_VERSION}" \
     && npm cache clean --force
 
+RUN set -eu; \
+    rex_tmp="$(mktemp -d)"; \
+    trap 'rm -rf "$rex_tmp"' EXIT; \
+    curl -fsSL "https://blob.superlogical.com/download/rex/preview/${REX_COMMIT}/rex-linux-arm64.tar.gz" \
+      -o "$rex_tmp/rex.tar.gz"; \
+    printf '%s  %s\n' "$REX_SHA256" "$rex_tmp/rex.tar.gz" | sha256sum -c -; \
+    tar -xzf "$rex_tmp/rex.tar.gz" -C "$rex_tmp" rex; \
+    install -m 0755 "$rex_tmp/rex" /usr/local/bin/rex; \
+    rex version
+
 ENV PATH="/home/agent/.local/bin:$PATH" \
     TERM=xterm-256color \
     COLORTERM=truecolor \
     LESS=-R \
     DISABLE_AUTOUPDATER=1
 
-# ---- full-root: everything else (root) ----
 FROM slim-root AS full-root
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -106,15 +115,14 @@ RUN sed -i 's/^CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--no-sandbox"/' /usr/bin/chromi
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# ---- published targets ----
 FROM slim-root AS slim
 USER agent
 WORKDIR /workspace
-ENTRYPOINT ["/usr/local/bin/sandbox-entrypoint"]
-CMD ["bash"]
+ENTRYPOINT ["/usr/local/bin/rex"]
+CMD ["server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
 
 FROM full-root AS full
 USER agent
 WORKDIR /workspace
-ENTRYPOINT ["/usr/local/bin/sandbox-entrypoint"]
-CMD ["bash"]
+ENTRYPOINT ["/usr/local/bin/rex"]
+CMD ["server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
