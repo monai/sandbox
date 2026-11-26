@@ -122,7 +122,7 @@ COPY rootfs/usr/local/ /usr/local/
 USER agent
 WORKDIR /workspace
 ENTRYPOINT ["/usr/local/bin/sandbox-entrypoint"]
-CMD ["rex", "server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
+CMD ["bash"]
 
 FROM full-root AS full
 COPY rootfs/etc/docker/ /etc/docker/
@@ -130,4 +130,4 @@ COPY rootfs/usr/local/ /usr/local/
 USER agent
 WORKDIR /workspace
 ENTRYPOINT ["/usr/local/bin/sandbox-entrypoint"]
-CMD ["rex", "server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
+CMD ["bash"]
