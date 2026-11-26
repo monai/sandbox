@@ -6,10 +6,11 @@ FROM debian:trixie-slim AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-COPY rootfs/ /
-
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+COPY rootfs/usr/share/keyrings/ /usr/share/keyrings/
+COPY rootfs/etc/apt/ /etc/apt/
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
@@ -116,13 +117,17 @@ RUN sed -i 's/^CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--no-sandbox"/' /usr/bin/chromi
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 FROM slim-root AS slim
+COPY rootfs/etc/docker/ /etc/docker/
+COPY rootfs/usr/local/ /usr/local/
 USER agent
 WORKDIR /workspace
-ENTRYPOINT ["/usr/local/bin/rex"]
-CMD ["server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
+ENTRYPOINT ["/usr/local/bin/sandbox-entrypoint"]
+CMD ["rex", "server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
 
 FROM full-root AS full
+COPY rootfs/etc/docker/ /etc/docker/
+COPY rootfs/usr/local/ /usr/local/
 USER agent
 WORKDIR /workspace
-ENTRYPOINT ["/usr/local/bin/rex"]
-CMD ["server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
+ENTRYPOINT ["/usr/local/bin/sandbox-entrypoint"]
+CMD ["rex", "server", "run", "--extra-listen", "http://0.0.0.0:7297", "--allow-anonymous"]
