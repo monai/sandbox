@@ -75,13 +75,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN groupadd --gid "$AGENT_GID" agent \
     && useradd --uid "$AGENT_UID" --gid "$AGENT_GID" --groups docker --create-home --shell /bin/bash agent \
-    && mkdir -p /home/agent/.local/bin /workspace \
-    && chown -R agent:agent /home/agent /workspace \
+    && mkdir -p /opt/npm /workspace \
+    && chown -R agent:agent /opt/npm /workspace \
     && echo "agent ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/agent \
     && chmod 0440 /etc/sudoers.d/agent
 
-RUN runuser -u agent -- npm config set prefix /home/agent/.local \
-    && runuser -u agent -- npm install -g \
+ENV NPM_CONFIG_PREFIX=/opt/npm
+
+RUN runuser -u agent -- npm install -g \
     "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
     "@earendil-works/pi-coding-agent@${PI_CODING_AGENT_VERSION}" \
     "@openai/codex@${CODEX_VERSION}" \
@@ -97,7 +98,7 @@ RUN set -eu; \
     install -m 0755 "$rex_tmp/rex" /usr/local/bin/rex; \
     rex version
 
-ENV PATH="/home/agent/.local/bin:$PATH" \
+ENV PATH="${NPM_CONFIG_PREFIX}/bin:/home/agent/.local/bin:$PATH" \
     TERM=xterm-256color \
     COLORTERM=truecolor \
     LESS=-R \
