@@ -80,11 +80,12 @@ RUN groupadd --gid "$AGENT_GID" agent \
     && echo "agent ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/agent \
     && chmod 0440 /etc/sudoers.d/agent
 
-RUN npm install -g \
+RUN runuser -u agent -- npm config set prefix /home/agent/.local \
+    && runuser -u agent -- npm install -g \
     "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
     "@earendil-works/pi-coding-agent@${PI_CODING_AGENT_VERSION}" \
     "@openai/codex@${CODEX_VERSION}" \
-    && npm cache clean --force
+    && runuser -u agent -- npm cache clean --force
 
 RUN set -eu; \
     rex_tmp="$(mktemp -d)"; \
