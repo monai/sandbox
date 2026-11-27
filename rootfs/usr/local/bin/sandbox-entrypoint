@@ -8,6 +8,7 @@ fi
 rex server start \
   --extra-listen "http://0.0.0.0:7297" \
   --allow-anonymous \
+  >/dev/null \
   || echo "sandbox-entrypoint: rex server failed to start" >&2
 
 exec "$@"
