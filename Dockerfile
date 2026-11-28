@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     python-is-python3 \
     python3 \
+    rex \
     ripgrep \
     unzip \
     xz-utils \
@@ -44,8 +45,6 @@ ARG AGENT_GID=1000
 ARG CLAUDE_CODE_VERSION=2.1.332
 ARG CODEX_VERSION=0.172.0
 ARG PI_CODING_AGENT_VERSION=1.7.0
-ARG REX_COMMIT=b070aae645f5cbfac65d65d031a8b712b2ebca36
-ARG REX_SHA256=37908dc3e79386b05fcd2e26d1bcf3c28f34536fc816eb8126a9b9c65266f630
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apparmor \
@@ -89,16 +88,6 @@ RUN runuser -u agent -- npm install -g \
     "@earendil-works/pi-coding-agent@${PI_CODING_AGENT_VERSION}" \
     "@openai/codex@${CODEX_VERSION}" \
     && runuser -u agent -- npm cache clean --force
-
-RUN set -eu; \
-    rex_tmp="$(mktemp -d)"; \
-    trap 'rm -rf "$rex_tmp"' EXIT; \
-    curl -fsSL "https://blob.superlogical.com/download/rex/preview/${REX_COMMIT}/rex-linux-arm64.tar.gz" \
-      -o "$rex_tmp/rex.tar.gz"; \
-    printf '%s  %s\n' "$REX_SHA256" "$rex_tmp/rex.tar.gz" | sha256sum -c -; \
-    tar -xzf "$rex_tmp/rex.tar.gz" -C "$rex_tmp" rex; \
-    install -m 0755 "$rex_tmp/rex" /usr/local/bin/rex; \
-    rex version
 
 ENV PATH="${NPM_CONFIG_PREFIX}/bin:/home/agent/.local/bin:$PATH" \
     TERM=xterm-256color \

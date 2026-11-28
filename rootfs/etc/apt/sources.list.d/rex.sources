@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://pkgs.superlogical.com/rex/apt
+Suites: preview
+Components: main
+Signed-By: /usr/share/keyrings/rex-archive-keyring.gpg
