@@ -5,6 +5,10 @@ if mountpoint -q /storage; then
   sudo /usr/local/sbin/start-dockerd || echo "sandbox-entrypoint: dockerd failed to start" >&2
 fi
 
+if [ -c /dev/pts/ptmx ] && [ "$(readlink -f /dev/ptmx)" = /dev/pts/ptmx ] && [ ! -w /dev/ptmx ]; then
+  sudo chmod 0666 /dev/pts/ptmx || echo "sandbox-entrypoint: failed to enable PTY allocation" >&2
+fi
+
 rex server start >/dev/null || echo "sandbox-entrypoint: rex server failed to start" >&2
 
 if [ -f /run/sandbox/authorized_keys ]; then
