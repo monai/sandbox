@@ -59,6 +59,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     lsof \
     make \
     netcat-openbsd \
+    openssh-server \
     patch \
     rsync \
     shellcheck \
@@ -71,7 +72,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     vim \
     xxd \
     zip \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub
 
 RUN groupadd --gid "$AGENT_GID" agent \
     && useradd --uid "$AGENT_UID" --gid "$AGENT_GID" --groups docker --create-home --shell /bin/bash agent \

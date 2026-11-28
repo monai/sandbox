@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+mkdir -p /run/sshd
+host_key=/etc/ssh/ssh_host_ed25519_key
+if [ ! -f "$host_key" ]; then
+  ssh-keygen -q -t ed25519 -N '' -f "$host_key"
+fi
+
+exec /usr/sbin/sshd -f /usr/local/etc/sandbox/sshd_config
